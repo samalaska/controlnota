@@ -1,0 +1,2346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistema de Notas Fiscais 🚚</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            /* Tema Claro */
+            --bg-primary: #fefce8;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --shadow: rgba(251, 146, 60, 0.15);
+            --shadow-hover: rgba(251, 146, 60, 0.25);
+            
+            /* Cores de Status */
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --info: #3b82f6;
+            --info-light: #dbeafe;
+            
+            /* Cores Gamificadas - Paleta Quente */
+            --primary: #f59e0b;
+            --primary-light: #fef3c7;
+            --accent: #fb923c;
+            --accent-light: #ffedd5;
+            --tertiary: #fbbf24;
+        }
+
+        body.dark-mode {
+            --bg-primary: #1c1917;
+            --bg-secondary: #292524;
+            --bg-card: #44403c;
+            --text-primary: #fafaf9;
+            --text-secondary: #d6d3d1;
+            --shadow: rgba(251, 146, 60, 0.2);
+            --shadow-hover: rgba(251, 146, 60, 0.3);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* ===== TELA DE LOGIN ===== */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .login-container {
+            background: var(--bg-card);
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px var(--shadow);
+            text-align: center;
+            animation: slideUp 0.6s ease;
+            max-width: 90%;
+            width: 350px;
+        }
+
+        .login-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: var(--text-primary);
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            text-align: center;
+            letter-spacing: 8px;
+            margin-bottom: 20px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(251, 146, 60, 0.4);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:active {
+            transform: scale(0.95);
+        }
+
+        .login-error {
+            color: var(--danger);
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* ===== LAYOUT PRINCIPAL ===== */
+        #app {
+            display: none;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            box-shadow: 4px 0 20px var(--shadow);
+            z-index: 1000;
+            transform: translateX(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-280px);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .menu-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--shadow);
+            z-index: 1001;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-toggle:active {
+            transform: scale(0.9);
+        }
+
+        .sidebar.collapsed ~ .menu-toggle {
+            left: 20px;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 10px;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            gap: 12px;
+        }
+
+        .nav-link:hover {
+            background: var(--primary-light);
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        /* ===== CONTEÚDO PRINCIPAL ===== */
+        .main-content {
+            margin-left: 280px;
+            padding: 30px;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 0;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* ===== TABS ===== */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 16px var(--shadow);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 24px var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        /* ===== ROTAS ===== */
+        .rota-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 16px var(--shadow);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary);
+        }
+
+        .rota-card:hover {
+            box-shadow: 0 8px 24px var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .rota-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .rota-info {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .rota-icon {
+            font-size: 48px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .rota-details h3 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .rota-meta {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .rota-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-badge.pendente {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .status-badge.entregue {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .status-badge:hover {
+            transform: scale(1.05);
+        }
+
+        /* ===== NOTAS FISCAIS ===== */
+        .notas-list {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .notas-list.collapsed {
+            max-height: 0;
+            padding: 0;
+            margin-top: 0;
+            opacity: 0;
+        }
+
+        .notas-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .notas-list-header strong {
+            color: var(--text-primary);
+        }
+
+        .toggle-notas-btn {
+            background: var(--primary-light);
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toggle-notas-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .toggle-notas-btn:active {
+            transform: scale(0.95);
+        }
+
+        .notas-container {
+            transition: all 0.3s ease;
+        }
+
+        .nota-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            border-left: 3px solid var(--primary);
+        }
+
+        .nota-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .nota-item.entregue {
+            opacity: 0.6;
+            border-left-color: var(--success);
+        }
+
+        .nota-item.entregue .nota-numero {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .nota-numero {
+            font-weight: bold;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .nota-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nota-check-btn {
+            background: none;
+            border: 2px solid var(--success);
+            color: var(--success);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .nota-check-btn:active {
+            transform: scale(0.9);
+        }
+
+        .nota-check-btn.checked {
+            background: var(--success);
+            color: white;
+        }
+
+        .nota-delete-btn {
+            background: var(--danger-light);
+            border: none;
+            color: var(--danger);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .nota-delete-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* ===== BOTÕES ===== */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        /* ===== BUSCA ===== */
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 16px;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(251, 146, 60, 0.3);
+            border-color: var(--accent);
+        }
+
+        /* ===== MOTORISTAS ===== */
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 12px 20px;
+            border: 2px solid var(--primary);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .motorista-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px var(--shadow);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary);
+        }
+
+        .motorista-card:hover {
+            box-shadow: 0 8px 24px var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .motorista-card.dentro-prazo {
+            border-left-color: var(--success);
+        }
+
+        .motorista-card.em-risco {
+            border-left-color: var(--warning);
+        }
+
+        .motorista-card.vencido {
+            border-left-color: var(--danger);
+        }
+
+        .motorista-header {
+            margin-bottom: 16px;
+        }
+
+        .motorista-nome {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .motorista-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .stat-box {
+            background: var(--bg-primary);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .progress-bar-container {
+            height: 8px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .motorista-card.em-risco .progress-bar {
+            background: linear-gradient(135deg, var(--warning) 0%, var(--tertiary) 100%);
+        }
+
+        .motorista-card.vencido .progress-bar {
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+        }
+
+        /* ===== DASHBOARD ===== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 4px 16px var(--shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px var(--shadow-hover);
+        }
+
+        .kpi-card.success {
+            border-color: var(--success);
+        }
+
+        .kpi-card.warning {
+            border-color: var(--warning);
+        }
+
+        .kpi-card.danger {
+            border-color: var(--danger);
+        }
+
+        .kpi-card.info {
+            border-color: var(--primary);
+        }
+
+        .kpi-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .kpi-value {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .kpi-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 90%;
+            width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        /* ===== FORMULÁRIOS ===== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(251, 146, 60, 0.3);
+        }
+
+        /* ===== TEMA ESCURO ===== */
+        .theme-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border: none;
+            border-radius: 50%;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--shadow);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.9);
+        }
+
+        /* Botão de Logout */
+        .logout-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 110px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+            border: none;
+            border-radius: 50%;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--shadow);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* ===== NOTIFICAÇÃO ===== */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            background: var(--bg-card);
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px var(--shadow);
+            font-weight: bold;
+            z-index: 3000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            border-left: 4px solid var(--primary);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left-color: var(--success);
+        }
+
+        .notification.error {
+            border-left-color: var(--danger);
+        }
+
+        /* ===== ANIMAÇÕES ===== */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+
+        /* ===== HISTÓRICO ===== */
+        .historico-item {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary);
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .historico-item:hover {
+            box-shadow: 0 4px 16px var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .historico-item.entregue {
+            border-left-color: var(--success);
+            opacity: 0.8;
+        }
+
+        .historico-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .historico-info strong {
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        .historico-info span {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .historico-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            justify-self: end;
+        }
+
+        .historico-status.status-entregue {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .historico-status.status-pendente {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .historico-status.status-vencida {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        /* ===== RESPONSIVIDADE ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-280px);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                left: 20px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .motorista-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .rota-actions {
+                flex-direction: column;
+            }
+
+            .nota-item {
+                flex-wrap: wrap;
+            }
+
+            .nota-actions {
+                margin-top: 8px;
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .historico-item {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .historico-status {
+                justify-self: start;
+            }
+
+            .logout-btn {
+                bottom: 110px;
+                right: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Tela de Login -->
+    <div id="login-screen">
+        <div class="login-container">
+            <div class="login-icon">🚚</div>
+            <div class="login-title">Sistema de Notas Fiscais</div>
+            <input type="password" id="password-input" class="login-input" placeholder="••••" maxlength="4">
+            <button onclick="checkPassword()" class="login-btn">Entrar</button>
+            <div id="login-error" class="login-error">❌ Senha incorreta!</div>
+        </div>
+    </div>
+
+    <!-- Aplicação Principal -->
+    <div id="app">
+        <!-- Botão de Menu -->
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">📦 Menu</div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link active" onclick="showTab('rotas')">
+                        <span class="nav-icon">🗺️</span>
+                        <span>Rotas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showTab('motoristas')">
+                        <span class="nav-icon">👨‍✈️</span>
+                        <span>Motoristas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showTab('dashboard')">
+                        <span class="nav-icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showTab('prazos')">
+                        <span class="nav-icon">⏰</span>
+                        <span>Prazos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showTab('historico')">
+                        <span class="nav-icon">📜</span>
+                        <span>Histórico</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <!-- ABA ROTAS -->
+            <div id="rotas-tab" class="tab-content active">
+                <div class="page-header">
+                    <h1 class="page-title">🗺️ Rotas</h1>
+                    <p class="page-subtitle">Gerencie suas rotas e notas fiscais</p>
+                </div>
+
+                <!-- Barra de Pesquisa -->
+                <div class="search-container">
+                    <input type="text" class="search-input" id="search-rotas" placeholder="🔍 Buscar rota ou nota fiscal..." oninput="searchRotas()">
+                </div>
+
+                <!-- Filtros -->
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterRotas('todas')">Todas</button>
+                    <button class="filter-btn" onclick="filterRotas('pendentes')">📋 Pendentes</button>
+                    <button class="filter-btn" onclick="filterRotas('entregues')">✅ Entregues</button>
+                    <button class="filter-btn" onclick="filterRotas('dentro-prazo')">✅ Dentro do Prazo</button>
+                    <button class="filter-btn" onclick="filterRotas('em-risco')">⚠️ Em Risco</button>
+                    <button class="filter-btn" onclick="filterRotas('vencidas')">❌ Vencidas</button>
+                </div>
+
+                <!-- Botão Adicionar Rota -->
+                <button class="btn btn-primary" onclick="openAddRotaModal()" style="margin-bottom: 20px;">
+                    ➕ Adicionar Nova Rota
+                </button>
+
+                <!-- Lista de Rotas -->
+                <div id="rotas-list"></div>
+            </div>
+
+            <!-- ABA MOTORISTAS -->
+            <div id="motoristas-tab" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">👨‍✈️ Motoristas</h1>
+                    <p class="page-subtitle">Acompanhe o status de cada motorista</p>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterMotoristas('todos')">Todos</button>
+                    <button class="filter-btn" onclick="filterMotoristas('dentro-prazo')">✅ Dentro do Prazo</button>
+                    <button class="filter-btn" onclick="filterMotoristas('em-risco')">⚠️ Em Risco</button>
+                    <button class="filter-btn" onclick="filterMotoristas('vencidos')">❌ Vencidos</button>
+                </div>
+
+                <!-- Lista de Motoristas -->
+                <div id="motoristas-list"></div>
+            </div>
+
+            <!-- ABA DASHBOARD -->
+            <div id="dashboard-tab" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">📊 Dashboard</h1>
+                    <p class="page-subtitle">Visão geral da operação</p>
+                </div>
+
+                <!-- KPIs Principais -->
+                <div class="dashboard-grid">
+                    <div class="kpi-card success" onclick="showKpiDetails('dentro-prazo')">
+                        <div class="kpi-icon">✅</div>
+                        <div class="kpi-value" id="kpi-dentro-prazo">0</div>
+                        <div class="kpi-label">Dentro do Prazo</div>
+                    </div>
+                    <div class="kpi-card warning" onclick="showKpiDetails('em-risco')">
+                        <div class="kpi-icon">⚠️</div>
+                        <div class="kpi-value" id="kpi-em-risco">0</div>
+                        <div class="kpi-label">Em Risco</div>
+                    </div>
+                    <div class="kpi-card danger" onclick="showKpiDetails('vencidos')">
+                        <div class="kpi-icon">❌</div>
+                        <div class="kpi-value" id="kpi-vencidos">0</div>
+                        <div class="kpi-label">Prazo Vencido</div>
+                    </div>
+                    <div class="kpi-card info">
+                        <div class="kpi-icon">🧠</div>
+                        <div class="kpi-value" id="kpi-eficiencia">0%</div>
+                        <div class="kpi-label">Eficiência</div>
+                    </div>
+                </div>
+
+                <!-- Resumo do Dia -->
+                <div class="card">
+                    <h3 style="margin-bottom: 16px; font-size: 20px;">📅 Resumo do Dia</h3>
+                    <div class="dashboard-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Motoristas Adicionados</div>
+                            <div class="stat-value" id="resumo-adicionados">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Começaram a Vencer</div>
+                            <div class="stat-value" id="resumo-vencer">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Venceram Hoje</div>
+                            <div class="stat-value" id="resumo-vencidos">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Notas Recolhidas</div>
+                            <div class="stat-value" id="resumo-recolhidas">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notas em Rota -->
+                <div class="card" onclick="showNotasEmRota()" style="cursor: pointer;">
+                    <h3 style="margin-bottom: 16px; font-size: 20px;">📋 Notas Fiscais</h3>
+                    <div class="dashboard-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Em Rota</div>
+                            <div class="stat-value" id="notas-em-rota">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Vencendo</div>
+                            <div class="stat-value" id="notas-vencendo">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Vencidas</div>
+                            <div class="stat-value" id="notas-vencidas">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Entregues</div>
+                            <div class="stat-value" id="notas-entregues">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA PRAZOS -->
+            <div id="prazos-tab" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">⏰ Prazos</h1>
+                    <p class="page-subtitle">Acompanhamento de prazos de entrega</p>
+                </div>
+
+                <!-- Lista de Prazos -->
+                <div id="prazos-list"></div>
+            </div>
+
+            <!-- ABA HISTÓRICO -->
+            <div id="historico-tab" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">📜 Histórico</h1>
+                    <p class="page-subtitle">Visualize todas as notas fiscais do sistema</p>
+                </div>
+
+                <!-- Barra de Pesquisa -->
+                <div class="search-container">
+                    <input type="text" class="search-input" id="search-historico" placeholder="🔍 Buscar por nota, rota ou motorista..." oninput="searchHistorico()">
+                </div>
+
+                <!-- Filtros -->
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterHistorico('todas')">Todas</button>
+                    <button class="filter-btn" onclick="filterHistorico('entregues')">✅ Entregues</button>
+                    <button class="filter-btn" onclick="filterHistorico('pendentes')">📋 Pendentes</button>
+                </div>
+
+                <!-- Lista de Histórico -->
+                <div id="historico-list"></div>
+            </div>
+        </main>
+
+        <!-- Botão de Logout -->
+        <button class="logout-btn" onclick="logout()" title="Sair do sistema">🚪</button>
+
+        <!-- Botão de Tema -->
+        <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙</button>
+
+        <!-- Modal Adicionar Rota -->
+        <div id="modal-add-rota" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">➕ Nova Rota</h2>
+                    <button class="modal-close" onclick="closeModal('modal-add-rota')">✕</button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Número da Rota</label>
+                    <input type="text" id="input-rota-numero" class="form-input" placeholder="Ex: R001">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Motorista</label>
+                    <input type="text" id="input-rota-motorista" class="form-input" placeholder="Nome do motorista">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Data de Entrega</label>
+                    <input type="date" id="input-rota-data" class="form-input">
+                </div>
+                <button class="btn btn-primary" onclick="addRota()" style="width: 100%;">Adicionar Rota</button>
+            </div>
+        </div>
+
+        <!-- Modal Adicionar Nota Fiscal -->
+        <div id="modal-add-nota" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">📄 Adicionar Nota Fiscal</h2>
+                    <button class="modal-close" onclick="closeModal('modal-add-nota')">✕</button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Número da Nota Fiscal</label>
+                    <input type="text" id="input-nota-numero" class="form-input" placeholder="Ex: NF12345">
+                </div>
+                <button class="btn btn-primary" onclick="addNota()" style="width: 100%;">Adicionar Nota</button>
+            </div>
+        </div>
+
+        <!-- Modal KPI Details -->
+        <div id="modal-kpi-details" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="kpi-modal-title">Detalhes</h2>
+                    <button class="modal-close" onclick="closeModal('modal-kpi-details')">✕</button>
+                </div>
+                <div id="kpi-details-content"></div>
+            </div>
+        </div>
+
+        <!-- Notificação -->
+        <div id="notification" class="notification"></div>
+    </div>
+
+    <script>
+        // ===== SISTEMA DE DADOS =====
+        let rotas = [];
+        let currentRotaId = null;
+        let currentFilter = 'todos';
+        let currentRotasFilter = 'todas';
+        let currentHistoricoFilter = 'todas';
+        let expandedRotas = {}; // Armazena estado de expansão das rotas
+
+        // ===== AUTENTICAÇÃO =====
+        function checkPassword() {
+            const password = document.getElementById('password-input').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            if (password === '1234') {
+                // Salvar sessão no localStorage
+                localStorage.setItem('isLoggedIn', 'true');
+                
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                loadData();
+                renderRotas();
+                renderMotoristas();
+                updateDashboard();
+                renderPrazos();
+            } else {
+                errorDiv.style.display = 'block';
+                document.getElementById('password-input').value = '';
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function logout() {
+            if (confirm('Deseja realmente sair do sistema?')) {
+                localStorage.removeItem('isLoggedIn');
+                location.reload();
+            }
+        }
+
+        // Verificar se usuário já está logado ao carregar a página
+        function checkAutoLogin() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            if (isLoggedIn === 'true') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                loadData();
+                renderRotas();
+                renderMotoristas();
+                updateDashboard();
+                renderPrazos();
+            }
+        }
+
+        // Carregar dados do localStorage
+        function loadData() {
+            const savedRotas = localStorage.getItem('rotas');
+            if (savedRotas) {
+                rotas = JSON.parse(savedRotas);
+                // Migrar dados antigos: adicionar propriedade "entregue" às notas que não têm
+                rotas.forEach(rota => {
+                    if (rota.notas) {
+                        rota.notas.forEach(nota => {
+                            if (nota.entregue === undefined) {
+                                nota.entregue = false;
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Carregar estado de expansão das rotas
+            const savedExpandedRotas = localStorage.getItem('expandedRotas');
+            if (savedExpandedRotas) {
+                expandedRotas = JSON.parse(savedExpandedRotas);
+            }
+        }
+
+        // Salvar dados no localStorage
+        function saveData() {
+            localStorage.setItem('rotas', JSON.stringify(rotas));
+        }
+
+        // Salvar estado de expansão
+        function saveExpandedState() {
+            localStorage.setItem('expandedRotas', JSON.stringify(expandedRotas));
+        }
+
+        // Toggle expansão de notas
+        function toggleNotasList(rotaId) {
+            expandedRotas[rotaId] = !expandedRotas[rotaId];
+            saveExpandedState();
+            
+            const notasList = document.getElementById(`notas-list-${rotaId}`);
+            const toggleBtn = document.getElementById(`toggle-btn-${rotaId}`);
+            
+            if (notasList && toggleBtn) {
+                if (expandedRotas[rotaId]) {
+                    notasList.classList.remove('collapsed');
+                    toggleBtn.innerHTML = '▼ Ocultar Notas';
+                } else {
+                    notasList.classList.add('collapsed');
+                    toggleBtn.innerHTML = '▶ Mostrar Notas';
+                }
+            }
+        }
+
+        // Enter para login
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar auto-login
+            checkAutoLogin();
+
+            const passwordInput = document.getElementById('password-input');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        checkPassword();
+                    }
+                });
+            }
+        });
+
+        // ===== NAVEGAÇÃO =====
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+            sidebar.classList.toggle('open');
+        }
+
+        function showTab(tabName) {
+            // Remover classe active de todas as tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // Adicionar classe active na tab selecionada
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.closest('.nav-link').classList.add('active');
+
+            // Atualizar conteúdo
+            if (tabName === 'rotas') {
+                renderRotas();
+            } else if (tabName === 'motoristas') {
+                renderMotoristas();
+            } else if (tabName === 'dashboard') {
+                updateDashboard();
+            } else if (tabName === 'prazos') {
+                renderPrazos();
+            } else if (tabName === 'historico') {
+                renderHistorico();
+            }
+
+            // Fechar sidebar em mobile
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        }
+
+        // ===== TEMA =====
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const themeBtn = document.getElementById('theme-btn');
+            themeBtn.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+            
+            // Salvar preferência
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        // Carregar tema salvo
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            const themeBtnEl = document.getElementById('theme-btn');
+            if (themeBtnEl) themeBtnEl.textContent = '☀️';
+        }
+
+        // ===== MODAL =====
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // ===== NOTIFICAÇÃO =====
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // ===== FUNÇÕES DE DATA =====
+        function formatDateBR(dateString) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        function getDaysSince(dateString) {
+            const [year, month, day] = dateString.split('-');
+            const date = new Date(year, month - 1, day);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffTime = today - date;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+
+        function getStatusFromDays(days) {
+            if (days <= 3) {
+                return { status: 'dentro-prazo', label: 'Dentro do Prazo', icon: '✅', color: 'success' };
+            } else if (days <= 6) {
+                return { status: 'em-risco', label: 'Em Risco', icon: '⚠️', color: 'warning' };
+            } else {
+                return { status: 'vencido', label: 'Prazo Vencido', icon: '❌', color: 'danger' };
+            }
+        }
+
+        function isToday(dateString) {
+            const [year, month, day] = dateString.split('-');
+            const date = new Date(year, month - 1, day);
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        }
+
+        // ===== ROTAS =====
+        function openAddRotaModal() {
+            // LIMPA OS CAMPOS SEMPRE QUE ABRIR O MODAL (isso resolve o problema de "já cadastrada")
+            document.getElementById('input-rota-numero').value = '';
+            document.getElementById('input-rota-motorista').value = '';
+            
+            // Definir data de hoje como padrão
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('input-rota-data').value = today;
+            openModal('modal-add-rota');
+        }
+
+        function addRota() {
+            const numero = document.getElementById('input-rota-numero').value.trim();
+            const motorista = document.getElementById('input-rota-motorista').value.trim();
+            const data = document.getElementById('input-rota-data').value;
+
+            if (!numero || !motorista || !data) {
+                showNotification('❌ Preencha todos os campos!', 'error');
+                return;
+            }
+
+            // Verificar se rota já existe (só mostra mensagem se realmente já foi cadastrada antes)
+            if (rotas.some(r => r.numero === numero)) {
+                showNotification('❌ Esta rota já está cadastrada!', 'error');
+                return;
+            }
+
+            const novaRota = {
+                id: Date.now().toString(),
+                numero,
+                motorista,
+                data,
+                notas: [],
+                entregue: false
+            };
+
+            rotas.unshift(novaRota); // Adicionar no início
+            expandedRotas[novaRota.id] = false; // Começar colapsado
+            saveData();
+            saveExpandedState();
+            renderRotas();
+            renderMotoristas();
+            updateDashboard();
+            renderPrazos();
+            closeModal('modal-add-rota');
+            
+            showNotification('✅ Rota adicionada com sucesso!');
+        }
+
+        function openAddNotaModal(rotaId) {
+            currentRotaId = rotaId;
+            // LIMPA O CAMPO SEMPRE QUE ABRIR O MODAL
+            document.getElementById('input-nota-numero').value = '';
+            openModal('modal-add-nota');
+        }
+
+        function addNota() {
+            const numero = document.getElementById('input-nota-numero').value.trim();
+
+            if (!numero) {
+                showNotification('❌ Digite o número da nota fiscal!', 'error');
+                return;
+            }
+
+            // VERIFICAÇÃO DE DUPLICATA PARA NOTA FISCAL (exatamente como você pediu)
+            const notaExiste = rotas.some(rota => 
+                rota.notas.some(nota => nota.numero === numero)
+            );
+
+            if (notaExiste) {
+                showNotification('❌ Esta nota fiscal já está cadastrada!', 'error');
+                return;
+            }
+
+            const rota = rotas.find(r => r.id === currentRotaId);
+            if (rota) {
+                rota.notas.push({
+                    id: Date.now().toString(),
+                    numero,
+                    entregue: false
+                });
+                saveData();
+                renderRotas();
+                renderMotoristas();
+                updateDashboard();
+                closeModal('modal-add-nota');
+                
+                showNotification('✅ Nota fiscal adicionada!');
+            }
+        }
+
+        function toggleEntregue(rotaId) {
+            const rota = rotas.find(r => r.id === rotaId);
+            if (rota) {
+                rota.entregue = !rota.entregue;
+                saveData();
+                renderRotas();
+                updateDashboard();
+                showNotification(rota.entregue ? '✅ Marcado como entregue!' : '📋 Desmarcado');
+            }
+        }
+
+        // Nova função: Toggle nota individual
+        function toggleNotaEntregue(event, rotaId, notaId) {
+            event.stopPropagation();
+            const rota = rotas.find(r => r.id === rotaId);
+            if (rota) {
+                const nota = rota.notas.find(n => n.id === notaId);
+                if (nota) {
+                    nota.entregue = !nota.entregue;
+                    saveData();
+                    renderRotas();
+                    updateDashboard();
+                    showNotification(nota.entregue ? '✅ Nota marcada como entregue!' : '📋 Nota desmarcada');
+                }
+            }
+        }
+
+        function deleteNota(event, rotaId, notaId) {
+            event.stopPropagation();
+            if (confirm('Deseja realmente excluir esta nota fiscal?')) {
+                const rota = rotas.find(r => r.id === rotaId);
+                if (rota) {
+                    rota.notas = rota.notas.filter(n => n.id !== notaId);
+                    saveData();
+                    renderRotas();
+                    renderMotoristas();
+                    updateDashboard();
+                    showNotification('🗑️ Nota fiscal excluída!');
+                }
+            }
+        }
+
+        function deleteRota(rotaId) {
+            if (confirm('Deseja realmente excluir esta rota e todas as notas fiscais?')) {
+                rotas = rotas.filter(r => r.id !== rotaId);
+                delete expandedRotas[rotaId];
+                saveData();
+                saveExpandedState();
+                renderRotas();
+                renderMotoristas();
+                updateDashboard();
+                renderPrazos();
+                showNotification('🗑️ Rota excluída!');
+            }
+        }
+
+        function searchRotas() {
+            const searchTerm = document.getElementById('search-rotas').value.toLowerCase();
+            renderRotas(searchTerm);
+        }
+
+        function filterRotas(filter) {
+            currentRotasFilter = filter;
+            
+            // Atualizar botões
+            const filterButtons = document.querySelectorAll('#rotas-tab .filter-btn');
+            filterButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            const searchTerm = document.getElementById('search-rotas').value.toLowerCase();
+            renderRotas(searchTerm);
+        }
+
+        function renderRotas(searchTerm = '') {
+            const container = document.getElementById('rotas-list');
+            
+            let filteredRotas = rotas;
+            
+            // Aplicar filtro de busca
+            if (searchTerm) {
+                filteredRotas = filteredRotas.filter(rota => {
+                    const rotaMatch = rota.numero.toLowerCase().includes(searchTerm);
+                    const motoristaMatch = rota.motorista.toLowerCase().includes(searchTerm);
+                    const notaMatch = rota.notas.some(nota => nota.numero.toLowerCase().includes(searchTerm));
+                    return rotaMatch || motoristaMatch || notaMatch;
+                });
+            }
+            
+            // Aplicar filtros de status
+            if (currentRotasFilter !== 'todas') {
+                filteredRotas = filteredRotas.filter(rota => {
+                    const days = getDaysSince(rota.data);
+                    const status = getStatusFromDays(days);
+                    
+                    if (currentRotasFilter === 'pendentes') return !rota.entregue;
+                    if (currentRotasFilter === 'entregues') return rota.entregue;
+                    if (currentRotasFilter === 'dentro-prazo') return !rota.entregue && status.status === 'dentro-prazo';
+                    if (currentRotasFilter === 'em-risco') return !rota.entregue && status.status === 'em-risco';
+                    if (currentRotasFilter === 'vencidas') return !rota.entregue && status.status === 'vencido';
+                    return true;
+                });
+            }
+
+            if (filteredRotas.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📦</div>
+                        <div class="empty-text">Nenhuma rota encontrada</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredRotas.map(rota => {
+                const days = getDaysSince(rota.data);
+                const status = getStatusFromDays(days);
+                const isExpanded = expandedRotas[rota.id] !== false; // Padrão: expandido
+                const notasCount = rota.notas.length;
+                const notasEntreguesCount = rota.notas.filter(n => n.entregue).length;
+                
+                return `
+                    <div class="rota-card">
+                        <div class="rota-header">
+                            <div class="rota-info">
+                                <div class="rota-icon">🚚</div>
+                                <div class="rota-details">
+                                    <h3>Rota ${rota.numero}</h3>
+                                    <div class="rota-meta">
+                                        👨‍✈️ ${rota.motorista} • 📅 ${formatDateBR(rota.data)} • ⏱️ ${days} dias
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rota-actions">
+                            <span class="status-badge ${rota.entregue ? 'entregue' : 'pendente'}" 
+                                  onclick="toggleEntregue('${rota.id}')">
+                                ${rota.entregue ? '✅ Entregue' : '📋 Pendente'}
+                            </span>
+                            <button class="btn btn-primary btn-small" onclick="openAddNotaModal('${rota.id}')">
+                                ➕ Adicionar Nota
+                            </button>
+                            ${notasCount > 0 ? `
+                                <button class="toggle-notas-btn" id="toggle-btn-${rota.id}" onclick="toggleNotasList('${rota.id}')">
+                                    ${isExpanded ? '▼ Ocultar Notas' : '▶ Mostrar Notas'}
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-danger btn-small" onclick="deleteRota('${rota.id}')">
+                                🗑️
+                            </button>
+                        </div>
+                        ${rota.notas.length > 0 ? `
+                            <div class="notas-list ${isExpanded ? '' : 'collapsed'}" id="notas-list-${rota.id}">
+                                <div class="notas-list-header">
+                                    <strong>📄 Notas Fiscais (${notasEntreguesCount}/${notasCount} entregues)</strong>
+                                </div>
+                                <div class="notas-container">
+                                    ${rota.notas.map(nota => `
+                                        <div class="nota-item ${nota.entregue ? 'entregue' : ''}">
+                                            <span class="nota-numero">${nota.numero}</span>
+                                            <div class="nota-actions">
+                                                <button class="nota-check-btn ${nota.entregue ? 'checked' : ''}" 
+                                                        onclick="toggleNotaEntregue(event, '${rota.id}', '${nota.id}')"
+                                                        title="${nota.entregue ? 'Marcar como não entregue' : 'Marcar como entregue'}">
+                                                    ${nota.entregue ? '✓' : '○'}
+                                                </button>
+                                                <button class="nota-delete-btn" 
+                                                        onclick="deleteNota(event, '${rota.id}', '${nota.id}')"
+                                                        title="Excluir nota">
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== MOTORISTAS =====
+        function filterMotoristas(filter) {
+            currentFilter = filter;
+            
+            // Atualizar botões
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderMotoristas();
+        }
+
+        function renderMotoristas() {
+            const container = document.getElementById('motoristas-list');
+            
+            // Agrupar rotas por motorista
+            const motoristasMap = {};
+            rotas.forEach(rota => {
+                if (!motoristasMap[rota.motorista]) {
+                    motoristasMap[rota.motorista] = {
+                        nome: rota.motorista,
+                        rotas: []
+                    };
+                }
+                motoristasMap[rota.motorista].rotas.push(rota);
+            });
+
+            let motoristas = Object.values(motoristasMap).map(m => {
+                const rotasAtivas = m.rotas.filter(r => !r.entregue);
+                const totalNotas = rotasAtivas.reduce((sum, r) => sum + r.notas.length, 0);
+                const oldestDate = rotasAtivas.length > 0 ? 
+                    Math.max(...rotasAtivas.map(r => getDaysSince(r.data))) : 0;
+                const status = getStatusFromDays(oldestDate);
+                
+                return {
+                    ...m,
+                    emRota: rotasAtivas.length > 0,
+                    notasPendentes: totalNotas,
+                    dias: oldestDate,
+                    status: status
+                };
+            });
+
+            // Filtrar
+            if (currentFilter !== 'todos') {
+                motoristas = motoristas.filter(m => m.status.status === currentFilter);
+            }
+
+            // Ordenar: vencidos > em risco > dentro do prazo
+            motoristas.sort((a, b) => {
+                const order = { 'vencido': 0, 'em-risco': 1, 'dentro-prazo': 2 };
+                return order[a.status.status] - order[b.status.status];
+            });
+
+            if (motoristas.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👨‍✈️</div>
+                        <div class="empty-text">Nenhum motorista encontrado</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = motoristas.map(motorista => {
+                const progressPercent = Math.min((motorista.dias / 7) * 100, 100);
+                
+                return `
+                    <div class="motorista-card ${motorista.status.status}">
+                        <div class="motorista-header">
+                            <div class="motorista-nome">${motorista.status.icon} ${motorista.nome}</div>
+                        </div>
+                        <div class="motorista-stats">
+                            <div class="stat-box">
+                                <div class="stat-label">Status</div>
+                                <div class="stat-value" style="font-size: 14px;">${motorista.emRota ? 'Em Rota' : 'Livre'}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Notas Pendentes</div>
+                                <div class="stat-value">${motorista.notasPendentes}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Dias Decorridos</div>
+                                <div class="stat-value">${motorista.dias}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Prazo</div>
+                                <div class="stat-value" style="font-size: 14px;">${motorista.status.label}</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${progressPercent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== DASHBOARD =====
+        function updateDashboard() {
+            // Contar motoristas por status
+            const motoristasMap = {};
+            rotas.forEach(rota => {
+                if (!rota.entregue) {
+                    if (!motoristasMap[rota.motorista]) {
+                        motoristasMap[rota.motorista] = {
+                            rotas: [],
+                            maxDias: 0
+                        };
+                    }
+                    const dias = getDaysSince(rota.data);
+                    motoristasMap[rota.motorista].rotas.push(rota);
+                    motoristasMap[rota.motorista].maxDias = Math.max(motoristasMap[rota.motorista].maxDias, dias);
+                }
+            });
+
+            let dentroPrazo = 0;
+            let emRisco = 0;
+            let vencidos = 0;
+
+            Object.values(motoristasMap).forEach(m => {
+                const status = getStatusFromDays(m.maxDias);
+                if (status.status === 'dentro-prazo') dentroPrazo++;
+                else if (status.status === 'em-risco') emRisco++;
+                else vencidos++;
+            });
+
+            const total = dentroPrazo + emRisco + vencidos;
+            const eficiencia = total > 0 ? Math.round((dentroPrazo / total) * 100) : 0;
+
+            document.getElementById('kpi-dentro-prazo').textContent = dentroPrazo;
+            document.getElementById('kpi-em-risco').textContent = emRisco;
+            document.getElementById('kpi-vencidos').textContent = vencidos;
+            document.getElementById('kpi-eficiencia').textContent = `${eficiencia}%`;
+
+            // Resumo do dia
+            const hoje = new Date().toISOString().split('T')[0];
+            const adicionadosHoje = rotas.filter(r => r.data === hoje).length;
+            const comecaramVencer = rotas.filter(r => getDaysSince(r.data) === 4 && !r.entregue).length;
+            const venceramHoje = rotas.filter(r => getDaysSince(r.data) === 7 && !r.entregue).length;
+            const notasRecolhidas = rotas.filter(r => r.entregue).reduce((sum, r) => sum + r.notas.filter(n => n.entregue).length, 0);
+
+            document.getElementById('resumo-adicionados').textContent = adicionadosHoje;
+            document.getElementById('resumo-vencer').textContent = comecaramVencer;
+            document.getElementById('resumo-vencidos').textContent = venceramHoje;
+            document.getElementById('resumo-recolhidas').textContent = notasRecolhidas;
+
+            // Notas
+            const notasEmRota = rotas.filter(r => !r.entregue).reduce((sum, r) => sum + r.notas.filter(n => !n.entregue).length, 0);
+            const notasVencendo = rotas.filter(r => {
+                const dias = getDaysSince(r.data);
+                return !r.entregue && dias >= 4 && dias <= 6;
+            }).reduce((sum, r) => sum + r.notas.filter(n => !n.entregue).length, 0);
+            const notasVencidas = rotas.filter(r => {
+                const dias = getDaysSince(r.data);
+                return !r.entregue && dias >= 7;
+            }).reduce((sum, r) => sum + r.notas.filter(n => !n.entregue).length, 0);
+            const notasEntregues = rotas.reduce((sum, r) => sum + r.notas.filter(n => n.entregue).length, 0);
+
+            document.getElementById('notas-em-rota').textContent = notasEmRota;
+            document.getElementById('notas-vencendo').textContent = notasVencendo;
+            document.getElementById('notas-vencidas').textContent = notasVencidas;
+            document.getElementById('notas-entregues').textContent = notasEntregues;
+        }
+
+        function showKpiDetails(tipo) {
+            const modal = document.getElementById('modal-kpi-details');
+            const title = document.getElementById('kpi-modal-title');
+            const content = document.getElementById('kpi-details-content');
+
+            let motoristas = [];
+            const motoristasMap = {};
+            
+            rotas.forEach(rota => {
+                if (!rota.entregue) {
+                    if (!motoristasMap[rota.motorista]) {
+                        motoristasMap[rota.motorista] = {
+                            nome: rota.motorista,
+                            rotas: [],
+                            maxDias: 0
+                        };
+                    }
+                    const dias = getDaysSince(rota.data);
+                    motoristasMap[rota.motorista].rotas.push(rota);
+                    motoristasMap[rota.motorista].maxDias = Math.max(motoristasMap[rota.motorista].maxDias, dias);
+                }
+            });
+
+            Object.values(motoristasMap).forEach(m => {
+                const status = getStatusFromDays(m.maxDias);
+                if (status.status === tipo) {
+                    motoristas.push({
+                        nome: m.nome,
+                        dias: m.maxDias,
+                        notas: m.rotas.reduce((sum, r) => sum + r.notas.filter(n => !n.entregue).length, 0),
+                        status: status
+                    });
+                }
+            });
+
+            if (tipo === 'dentro-prazo') {
+                title.textContent = '✅ Dentro do Prazo';
+            } else if (tipo === 'em-risco') {
+                title.textContent = '⚠️ Em Risco';
+            } else if (tipo === 'vencidos') {
+                title.textContent = '❌ Prazo Vencido';
+            }
+
+            if (motoristas.length === 0) {
+                content.innerHTML = '<div class="empty-state"><div class="empty-text">Nenhum motorista nesta categoria</div></div>';
+            } else {
+                content.innerHTML = motoristas.map(m => `
+                    <div class="card">
+                        <strong>${m.nome}</strong><br>
+                        📋 ${m.notas} notas • ⏱️ ${m.dias} dias
+                    </div>
+                `).join('');
+            }
+
+            openModal('modal-kpi-details');
+        }
+
+        function showNotasEmRota() {
+            const modal = document.getElementById('modal-kpi-details');
+            const title = document.getElementById('kpi-modal-title');
+            const content = document.getElementById('kpi-details-content');
+
+            title.textContent = '📋 Notas em Rota';
+
+            const rotasAtivas = rotas.filter(r => !r.entregue && r.notas.length > 0);
+
+            if (rotasAtivas.length === 0) {
+                content.innerHTML = '<div class="empty-state"><div class="empty-text">Nenhuma nota em rota</div></div>';
+            } else {
+                content.innerHTML = rotasAtivas.map(rota => {
+                    const dias = getDaysSince(rota.data);
+                    const status = getStatusFromDays(dias);
+                    
+                    return `
+                        <div class="card">
+                            <strong>Rota ${rota.numero}</strong> - ${rota.motorista}<br>
+                            ${status.icon} ${status.label} (${dias} dias)<br>
+                            <strong>Notas:</strong> ${rota.notas.map(n => n.numero).join(', ')}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            openModal('modal-kpi-details');
+        }
+
+        // ===== PRAZOS =====
+        function renderPrazos() {
+            const container = document.getElementById('prazos-list');
+            
+            // Agrupar por motorista
+            const motoristasMap = {};
+            rotas.forEach(rota => {
+                if (!rota.entregue) {
+                    if (!motoristasMap[rota.motorista]) {
+                        motoristasMap[rota.motorista] = {
+                            nome: rota.motorista,
+                            rotas: [],
+                            maxDias: 0
+                        };
+                    }
+                    const dias = getDaysSince(rota.data);
+                    motoristasMap[rota.motorista].rotas.push(rota);
+                    motoristasMap[rota.motorista].maxDias = Math.max(motoristasMap[rota.motorista].maxDias, dias);
+                }
+            });
+
+            let motoristas = Object.values(motoristasMap).map(m => ({
+                ...m,
+                status: getStatusFromDays(m.maxDias)
+            }));
+
+            // Ordenar: vencidos > em risco > dentro do prazo
+            motoristas.sort((a, b) => {
+                const order = { 'vencido': 0, 'em-risco': 1, 'dentro-prazo': 2 };
+                return order[a.status.status] - order[b.status.status];
+            });
+
+            if (motoristas.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⏰</div>
+                        <div class="empty-text">Nenhum prazo ativo</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = motoristas.map(motorista => {
+                const progressPercent = Math.min((motorista.maxDias / 7) * 100, 100);
+                
+                return `
+                    <div class="motorista-card ${motorista.status.status}">
+                        <div class="motorista-header">
+                            <div class="motorista-nome">${motorista.status.icon} ${motorista.nome}</div>
+                        </div>
+                        <div class="motorista-stats">
+                            <div class="stat-box">
+                                <div class="stat-label">Dias Decorridos</div>
+                                <div class="stat-value">${motorista.maxDias}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Status</div>
+                                <div class="stat-value" style="font-size: 14px;">${motorista.status.label}</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${progressPercent}%"></div>
+                        </div>
+                        <div style="margin-top: 12px; font-size: 14px; color: var(--text-secondary);">
+                            <strong>Rotas ativas:</strong> ${motorista.rotas.map(r => `${r.numero} (${formatDateBR(r.data)})`).join(', ')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== HISTÓRICO =====
+        function filterHistorico(filter) {
+            currentHistoricoFilter = filter;
+            
+            // Atualizar botões
+            const filterButtons = document.querySelectorAll('#historico-tab .filter-btn');
+            filterButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderHistorico();
+        }
+
+        function searchHistorico() {
+            renderHistorico();
+        }
+
+        function renderHistorico() {
+            const container = document.getElementById('historico-list');
+            const searchTerm = document.getElementById('search-historico').value.toLowerCase();
+            
+            // Coletar todas as notas de todas as rotas
+            let todasNotas = [];
+            rotas.forEach(rota => {
+                rota.notas.forEach(nota => {
+                    const days = getDaysSince(rota.data);
+                    const status = getStatusFromDays(days);
+                    
+                    todasNotas.push({
+                        notaNumero: nota.numero,
+                        notaId: nota.id,
+                        notaEntregue: nota.entregue,
+                        rotaNumero: rota.numero,
+                        rotaId: rota.id,
+                        motorista: rota.motorista,
+                        data: rota.data,
+                        dias: days,
+                        status: status,
+                        rotaEntregue: rota.entregue
+                    });
+                });
+            });
+
+            // Aplicar filtro de busca
+            if (searchTerm) {
+                todasNotas = todasNotas.filter(item => {
+                    return item.notaNumero.toLowerCase().includes(searchTerm) ||
+                           item.rotaNumero.toLowerCase().includes(searchTerm) ||
+                           item.motorista.toLowerCase().includes(searchTerm);
+                });
+            }
+
+            // Aplicar filtro de status
+            if (currentHistoricoFilter === 'entregues') {
+                todasNotas = todasNotas.filter(item => item.notaEntregue);
+            } else if (currentHistoricoFilter === 'pendentes') {
+                todasNotas = todasNotas.filter(item => !item.notaEntregue);
+            }
+
+            // Ordenar por data (mais recentes primeiro) e depois por número da rota
+            todasNotas.sort((a, b) => {
+                const dateCompare = new Date(b.data) - new Date(a.data);
+                if (dateCompare !== 0) return dateCompare;
+                return a.rotaNumero.localeCompare(b.rotaNumero);
+            });
+
+            if (todasNotas.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📜</div>
+                        <div class="empty-text">Nenhuma nota encontrada</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = todasNotas.map(item => {
+                const statusClass = item.notaEntregue ? 'status-entregue' : 
+                                   (item.status.status === 'vencido' ? 'status-vencida' : 'status-pendente');
+                const statusText = item.notaEntregue ? '✅ Entregue' : 
+                                  (item.status.status === 'vencido' ? '❌ Vencida' : 
+                                   item.status.status === 'em-risco' ? '⚠️ Em Risco' : '📋 Pendente');
+                
+                return `
+                    <div class="historico-item ${item.notaEntregue ? 'entregue' : ''}">
+                        <div class="historico-info">
+                            <strong>📄 ${item.notaNumero}</strong>
+                            <span>Nota Fiscal</span>
+                        </div>
+                        <div class="historico-info">
+                            <strong>🗺️ Rota ${item.rotaNumero}</strong>
+                            <span>👨‍✈️ ${item.motorista}</span>
+                        </div>
+                        <div class="historico-info">
+                            <strong>📅 ${formatDateBR(item.data)}</strong>
+                            <span>⏱️ ${item.dias} ${item.dias === 1 ? 'dia' : 'dias'} decorridos</span>
+                        </div>
+                        <div class="historico-status ${statusClass}">
+                            ${statusText}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Atualizar dados periodicamente
+        setInterval(() => {
+            if (document.getElementById('app').style.display !== 'none') {
+                const activeTab = document.querySelector('.tab-content.active').id;
+                if (activeTab === 'motoristas-tab') {
+                    renderMotoristas();
+                } else if (activeTab === 'dashboard-tab') {
+                    updateDashboard();
+                } else if (activeTab === 'prazos-tab') {
+                    renderPrazos();
+                } else if (activeTab === 'historico-tab') {
+                    renderHistorico();
+                }
+            }
+        }, 60000); // Atualizar a cada minuto
+    </script>
+</body>
+</html>
